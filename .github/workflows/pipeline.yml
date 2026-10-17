@@ -1,0 +1,30 @@
+name : CI Pipeline
+on:
+  push:
+    branches: [main]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+      - name: Set up php
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          tools: composer
+          extensions: mbstring, intl, bcmath, curl, xml, zip
+      - name: Validate composer.json and composer.lock
+        run: composer validate --no-check-publish    
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-progress --no-interaction
+      - name: validate Symfony container
+        run: php bin/console lint:container
+      - name: validate Symfony configuration
+        run: php bin/console lint:yaml config
+      - name: validate Symfony routes
+        run: php bin/console lint:routes config
+      - name: validate Symfony services
+        run: php bin/console lint:services config
+      - name: Run tests
+        run: php bin/phpunit --testdox --colors=always
